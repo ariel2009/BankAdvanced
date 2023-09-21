@@ -15,7 +15,7 @@
 	<nav class="nav navbar-default">
 		<div class="container-fluid">
 			<ul class="nav navbar-nav">
-				<li><a href=transfer.html>Money Trnsfer</a></li>
+				<li><a href=transfer.php>Money Trnsfer</a></li>
 				<li><a href=profSet.php>Update Profile</a></li>
 				<li><a id="logout" href="#">Log out <i id="logout_icon" class="glyphicon glyphicon-log-out"></i></a></li>
 			</ul>
