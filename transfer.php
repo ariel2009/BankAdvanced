@@ -19,7 +19,7 @@
 		<form action="#" method="post">
 			<div class="form-group col-md-4">
 				Reciever Acoount Number:<input class="form-control" type="number" placeholder="12345678"/>
-				How much money to transfer:<input class="form-control" type="number" placeholder="99999" value="0"/>
+				How much money to transfer:<input class="form-control" type="number" min="1" placeholder="99999" value="1"/>
 				<button id="transfer_btn" class="btn btn-warning" type="submit" onclick="alert('Transfer has done succesfully!');" text="Tranfer">Transfer<i id="transfer_ico" class="glyphicon glyphicon-play"></i></button>
 			</div>
 		</form>
