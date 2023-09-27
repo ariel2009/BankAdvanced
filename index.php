@@ -49,6 +49,7 @@
             /* set session */
             $_SESSION["user"]    = $return_array["data"]["username"];
             $_SESSION["userid"]  = $return_array["data"]["id"];
+            $_SESSION["accountID"] = $return_array["data"]["accountID"];
 
             /* set cookie */
             die(Header("Location: ./mainPage.php"));

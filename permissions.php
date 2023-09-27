@@ -12,7 +12,7 @@
     }
 
     /* Check if the user logged in */
-    if(!$_SESSION["user"])
+    if(!$_SESSION["user"] or !$_SESSION["accountID"])
     {
         die(Header("Location: ./index.php"));
     }

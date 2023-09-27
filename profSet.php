@@ -1,5 +1,6 @@
 <?php
 	require_once './DatabaseInterface.php';
+	require_once "./permissions.php";
 	$databaseObj = new DatabaseInterface();
 	if (session_status() == PHP_SESSION_NONE) {
         session_start();
