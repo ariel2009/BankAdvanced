@@ -167,7 +167,7 @@
 
             if(!$cursor->rowCount())
             {
-                return array("success"=>false,"data"=>"accountID does not exist!<br>");
+                return array("success"=>false,"data"=>"Reciever Account does not exist!<br>");
             }
             else
             {
