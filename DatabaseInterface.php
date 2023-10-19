@@ -46,26 +46,23 @@
             }
             /* New User */
             if(!($cursor->rowCount())){
-                $accountToCreate = $this->CreateAccount($username);
-                $_SESSION["accountID"] = $accountToCreate["data"];
-                $accountToCreate = $_SESSION["accountID"];
+                $isValid = $this->CreateAccount($username);
+                if(!$isValid["success"]){
+                    return array("success"=>false,"data"=>"Error. We can't create your account\nPlease contact support");
+                }
+                $accountToCreate = $isValid["data"];
                 try
                 {
-                    if(!$accountToCreate){
-                        return array("success"=>false,"data"=>"Error. We can't create your account\nPlease contact support");
+                    try{
+                        $cursor = $this->MySQLdb->prepare("INSERT INTO credentials (username, passhash,accountID) value (:username,:passhash,:accountID)");
+                        $cursor->execute(array(":passhash"=>md5($password), ":username"=>$username, ":accountID"=>$accountToCreate));
+                        $cursor = $this->MySQLdb->prepare("INSERT INTO totalmoney (accountID) value (:accountID)");
+                        $cursor->execute(array(":accountID"=>$accountToCreate));
+                        return array("success"=>true,"data"=>"You have registered successfuly!\n Your account number is: ".$accountToCreate);
+                        $this->CalcTotal($accountToCreate,0);
                     }
-                    else{
-                        try{
-                            $cursor = $this->MySQLdb->prepare("INSERT INTO credentials (username, passhash,accountID) value (:username,:passhash,:accountID)");
-                            $cursor->execute(array(":passhash"=>md5($password), ":username"=>$username, ":accountID"=>$accountToCreate));
-                            $cursor = $this->MySQLdb->prepare("INSERT INTO totalmoney (accountID) value (:accountID)");
-                            $cursor->execute(array(":accountID"=>$accountToCreate));
-                            return array("success"=>true,"data"=>"You have registered successfuly!\n Your account number is: ".$accountToCreate);
-                            $this->CalcTotal($_SESSION["accountID"],0);
-                        }
-                        catch(PDOException $e1) {
-                            $this->CheckErrors($e1);
-                        }
+                    catch(PDOException $e1) {
+                        $this->CheckErrors($e1);
                     }
                 }
                 catch(PDOException $e2) {
@@ -122,9 +119,9 @@
             }
             while($cursor->rowCount());
             if(!$maybeBusy){
-                return array("success"=>true,"data"=>$cursor->fetch());
+                return array("success"=>true,"data"=>$currentid);
             }
-            return array("success"=>false,"data"=>FALSE);
+            return array("success"=>false);
         }
         public function UpdateProfile($username, $currentPass, $nextPass){
             try{
@@ -147,7 +144,7 @@
                 $this->CheckErrors($e);
             }
         }
-        private function GetTotal($accountID){
+        public function GetTotal($accountID){
             try{
                 $cursor = $this->MySQLdb->prepare("SELECT total FROM totalmoney WHERE accountID=:accountID");
                 $cursor->execute(array(":accountID"=>$accountID));
@@ -211,7 +208,16 @@
                 $this->UpdateTransferDB($fromAccount, $toAccount, $amount);
                 return array("success"=>true,"data"=>$amount);
             }
-
+        }
+        public function FetchTransfers(){
+            try{
+                $cursor = $this->MySQLdb->prepare("SELECT * FROM transfers WHERE accountFromID=:accountFromID OR accountToID=:accountToID");
+                $cursor->execute(array(":accountFromID"=>$_SESSION["accountID"], ":accountToID"=>$_SESSION["accountID"]));
+            }
+            catch(PDOException $e) {
+                $this->CheckErrors($e);
+            }
+            return array("success"=>true,"data"=>$cursor->fetch());
         }
     }
 ?>

@@ -1,5 +1,7 @@
 <?php
 	require_once './permissions.php';
+	require_once './DatabaseInterface.php';
+	$databaseObj = new DatabaseInterface();
 ?>
 <!DOCTYPE html>
 <html>
@@ -22,9 +24,10 @@
 		</div>
 	</nav>
 	<h2 align="center">Dashboard</h2>
-	<h3><label class="label label-info">Balance:</label> 2967.34$</h3>
-	<h3><label class="label label-info">Credit Cards:</label>  ****-****-****-4575</h3>
-	<h3><label class="label label-warning">Recent Payments:</label><span style="color:red">-5.88</span>   swimming pool</h3>
+	<?php
+		echo sprintf("<h3><label class='label label-info'>Balance:</label> %s$</h3>", $databaseObj->GetTotal($_SESSION["accountID"]));
+		//<h3><label class="label label-warning">Recent Payments:</label><span style="color:red">-5.88</span>   swimming pool</h3>
+	?>
 	<script type="text/javascript">
 		$("#logout").hover(function(){
 			$("#logout_icon").animate({left:200});
