@@ -55,16 +55,21 @@
                         return array("success"=>false,"data"=>"Error. We can't create your account\nPlease contact support");
                     }
                     else{
-                        $cursor = $this->MySQLdb->prepare("INSERT INTO credentials (username, passhash,accountID) value (:username,:passhash,:accountID)");
-                        $cursor->execute(array(":passhash"=>md5($password), ":username"=>$username, ":accountID"=>$accountToCreate));
-                        $cursor = $this->MySQLdb->prepare("INSERT INTO totalmoney (accountID) value (:accountID)");
-                        $cursor->execute(array(":accountID"=>$accountToCreate));
-                        return array("success"=>true,"data"=>"You have registered successfuly!\n Your account number is: ".$accountToCreate);
-                        $this->CalcTotal($_SESSION["accountID"],0);
+                        try{
+                            $cursor = $this->MySQLdb->prepare("INSERT INTO credentials (username, passhash,accountID) value (:username,:passhash,:accountID)");
+                            $cursor->execute(array(":passhash"=>md5($password), ":username"=>$username, ":accountID"=>$accountToCreate));
+                            $cursor = $this->MySQLdb->prepare("INSERT INTO totalmoney (accountID) value (:accountID)");
+                            $cursor->execute(array(":accountID"=>$accountToCreate));
+                            return array("success"=>true,"data"=>"You have registered successfuly!\n Your account number is: ".$accountToCreate);
+                            $this->CalcTotal($_SESSION["accountID"],0);
+                        }
+                        catch(PDOException $e1) {
+                            $this->CheckErrors($e1);
+                        }
                     }
                 }
-                catch(PDOException $e) {
-                    $this->CheckErrors($e);
+                catch(PDOException $e2) {
+                    $this->CheckErrors($e2);
                 }
             }
             /* Already exists */
@@ -171,6 +176,15 @@
                 $this->CheckErrors($e);
             }
         }
+        private function UpdateTransferDB($fromAccountIn, $toAccountIn, $amountIn) {
+            try{
+                $cursor = $this->MySQLdb->prepare("INSERT INTO transfers (accountFromID, accountToID, amount) value (:fromAccountIn, :toAccountIn, :amountIn)");
+                $cursor->execute(array(":fromAccountIn"=>$fromAccountIn, ":toAccountIn"=>$toAccountIn, ":amountIn"=>$amountIn));
+            }
+            catch(PDOException $e) {
+                $this->CheckErrors($e);
+            }
+        }
         public function Transfer($fromAccount, $toAccount, $amount){
             try
             {
@@ -180,7 +194,10 @@
             catch(PDOException $e) {
                 $this->CheckErrors($e);
             }
-            if(!$this->IsAvaliable($amount, $fromAccount)){
+            if($fromAccount == $toAccount){
+                return array("success"=>false,"data"=>"You cannot transfer yourself!<br>");
+            }
+            else if(!$this->IsAvaliable($amount, $fromAccount)){
                 return array("success"=>false,"data"=>"You have no such money for this transfer!<br>");
             }
             else if(!$cursor->rowCount())
@@ -191,6 +208,7 @@
             {
                 $this->CalcTotal($fromAccount,-$amount);
                 $this->CalcTotal($toAccount,$amount);
+                $this->UpdateTransferDB($fromAccount, $toAccount, $amount);
                 return array("success"=>true,"data"=>$amount);
             }
 
