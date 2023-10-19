@@ -209,7 +209,7 @@
                 return array("success"=>true,"data"=>$amount);
             }
         }
-        public function FetchTransfers(){
+        public function GetTransfers(){
             try{
                 $cursor = $this->MySQLdb->prepare("SELECT * FROM transfers WHERE accountFromID=:accountFromID OR accountToID=:accountToID");
                 $cursor->execute(array(":accountFromID"=>$_SESSION["accountID"], ":accountToID"=>$_SESSION["accountID"]));
@@ -217,7 +217,10 @@
             catch(PDOException $e) {
                 $this->CheckErrors($e);
             }
-            return array("success"=>true,"data"=>$cursor->fetch());
+            if(!$cursor->rowCount()){
+                return array("success"=>false,"data"=>"There are no any activities in your account :)");
+            }
+            return array("success"=>true,"data"=>$cursor->fetchAll());
         }
     }
 ?>
