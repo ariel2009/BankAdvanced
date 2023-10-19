@@ -7,7 +7,7 @@
 
         public function __construct()
         {
-            $this->MySQLdb = new PDO("mysql:host=127.0.0.1:8111;dbname=bank", "root", "");
+            $this->MySQLdb = new PDO("mysql:host=127.0.0.1:3306;dbname=bank", "root", "");
             $this->MySQLdb->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         }
 
@@ -142,12 +142,28 @@
                 $this->CheckErrors($e);
             }
         }
-        private  function CalcTotal($accountID, $difference){
+        private function GetTotal($accountID){
             try{
                 $cursor = $this->MySQLdb->prepare("SELECT total FROM totalmoney WHERE accountID=:accountID");
                 $cursor->execute(array(":accountID"=>$accountID));
                 $total = $cursor->Fetch()["total"];
-                $total += $difference;
+                return $total;
+            }
+            catch(PDOException $e) {
+                $this->CheckErrors($e);
+            }
+        }
+        private function IsAvaliable($transferAmount,$fromAccountID){
+            $total = $this->GetTotal($fromAccountID);
+            if($transferAmount > $total){
+                return FALSE;
+            }
+            return TRUE;
+        }
+        private  function CalcTotal($accountID, $difference){
+            $total = $this->GetTotal($accountID);
+            $total += $difference;
+            try{
                 $cursor = $this->MySQLdb->prepare("UPDATE totalmoney SET total=:total WHERE accountID=:accountID");
                 $cursor->execute(array(":accountID"=>$accountID,":total"=>$total));
             }
@@ -164,8 +180,10 @@
             catch(PDOException $e) {
                 $this->CheckErrors($e);
             }
-
-            if(!$cursor->rowCount())
+            if(!$this->IsAvaliable($amount, $fromAccount)){
+                return array("success"=>false,"data"=>"You have no such money for this transfer!<br>");
+            }
+            else if(!$cursor->rowCount())
             {
                 return array("success"=>false,"data"=>"Reciever Account does not exist!<br>");
             }
@@ -175,6 +193,7 @@
                 $this->CalcTotal($toAccount,$amount);
                 return array("success"=>true,"data"=>$amount);
             }
+
         }
     }
 ?>
